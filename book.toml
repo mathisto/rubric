@@ -1,0 +1,15 @@
+# mdBook builds the public edition of the book; see research/2026-11-22-book-site.md.
+# tools/build-book.sh stages the chapters into .build/src before mdBook runs,
+# because the Incipit lives at the repo root as README.md.
+[book]
+title = "Rubric"
+authors = ["Matt Kelly"]
+language = "en"
+src = ".build/src"
+
+[build]
+build-dir = ".build/site"
+create-missing = false
+
+[output.html]
+git-repository-url = "https://github.com/mathisto/rubric"
