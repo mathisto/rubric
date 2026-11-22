@@ -39,3 +39,6 @@ Codeberg
 minisign
 winget
 dedent
+mdBook
+Zensical
+lovelace
