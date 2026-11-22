@@ -1,0 +1,22 @@
+# Words that mark prose as machine-written. The book is written by a model in
+# public, so these are errors, not taste.
+extends: existence
+message: "'%s' reads as machine-written. Say the plain thing."
+level: error
+ignorecase: true
+tokens:
+  - delv(e|es|ed|ing)
+  - tapestry
+  - realm
+  - multifaceted
+  - ever[- ]evolving
+  - testament
+  - let(')?s dive( in| into)?
+  - deep dive
+  - navigat(e|es|ing) the complexit(y|ies)
+  - in the (world|landscape) of
+  - in conclusion
+  - in summary
+  - meticulous(ly)?
+  - embark(s|ed|ing)?
+  - unlock(s|ed|ing)? the (power|potential)

@@ -1,0 +1,10 @@
+# Headings use sentence case: only the first word, names, and the word after a
+# colon or dash are capitalized. A heading may start lowercase (`bat`) or with a
+# version number. Add a new product or project name to the list below.
+extends: existence
+message: "Use sentence case in headings: lowercase '%s', unless it is a name."
+level: warning
+scope: heading
+nonword: true
+tokens:
+  - '(?<=[^:—–-]\s)(?!(?:Deliverator|Signal|Matt|Kelly|Monster|Tower|Tokyo|Night|Rosé|Pine|TextMate|VS|Code|Unity|Windows|Terminal|WezTerm|Web|Guidance|Phosphor|Iosevka|Workshop|Sans|Mono|Text|Neovim|Mudlet|Glowdeep|Tallboy|Lisp|Stone|Rose|SCRAPLIGHT|Carmen|PixelSim|Storybook|Playwright|GitHub|Hyper)\b)[A-Z][a-z]+\b'

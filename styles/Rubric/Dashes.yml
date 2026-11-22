@@ -1,0 +1,7 @@
+# One em dash in a sentence is a pause. Two is a habit.
+extends: occurrence
+message: "More than one em dash in a sentence. Use a full stop, a colon or parentheses."
+level: warning
+scope: sentence
+max: 1
+token: '—'

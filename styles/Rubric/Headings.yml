@@ -1,0 +1,9 @@
+# Sentence-case headings, as in the Deliverator, with the book's own names.
+# Add a name here when the book introduces one.
+extends: existence
+message: "Use sentence case in headings: lowercase '%s', unless it is a name."
+level: error
+scope: heading
+nonword: true
+tokens:
+  - '(?<=[^:—–-]\s)(?!(?:Rubric|Sienna|Knuth|Zig|Vale|Incipit|Colophon|Deliverator|Glowdeep|Campo|Matt|Claude|WebAssembly|Markdown|Gherkin|Cucumber|Elixir|Python|Rust|TeX|WEB|CWEB|Quorum|Ohm|Racket|Unicode|UTF)\b)[A-Z][a-z]+\b'

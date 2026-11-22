@@ -1,0 +1,8 @@
+# Excitement comes from the ideas, not the punctuation.
+extends: existence
+message: "No exclamation marks in the book's prose."
+level: warning
+nonword: true
+scope: sentence
+tokens:
+  - '!(?=\s|$)'

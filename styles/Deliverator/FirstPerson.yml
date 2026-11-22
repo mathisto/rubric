@@ -1,0 +1,12 @@
+# Matt prefers "we" and avoids first-person singular. A real story he wrote may
+# keep it, so this is a warning here. Projects that forbid it raise the level.
+extends: existence
+message: "First-person singular ('%s'). Prefer 'we' or name the subject."
+link: https://github.com/mathisto/the-deliverator/blob/main/docs/prose.md#first-person
+level: warning
+ignorecase: false
+nonword: true
+tokens:
+  - '\bI\b(?!/)'
+  - '\b(me|my|mine|myself)\b'
+  - '\b(Me|My|Mine|Myself)\b'

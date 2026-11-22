@@ -1,0 +1,19 @@
+# voice.md: "Remove sentences that add neither meaning, evidence, orientation nor action."
+extends: existence
+message: "'%s' is filler. Cut it, or say the specific thing."
+link: https://github.com/mathisto/the-deliverator/blob/main/docs/voice.md
+level: warning
+ignorecase: true
+tokens:
+  - it(')?s worth noting( that)?
+  - it is worth noting( that)?
+  - it(')?s important to note( that)?
+  - needless to say
+  - at the end of the day
+  - delv(e|es|ing) into
+  - a testament to
+  - rich tapestry
+  - in today(')?s (fast-paced )?world
+  - elevat(e|es|ing) (your|the) experience
+  - embark(s|ing)? on a journey
+  - take (it|things) to the next level

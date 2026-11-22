@@ -1,0 +1,9 @@
+# A design road not taken is a fork. "Branch" means a git branch.
+extends: substitution
+message: "Call a design alternative a '%s', not a '%s'. Keep 'branch' for git."
+level: warning
+ignorecase: true
+swap:
+  design branch(es)?: fork
+  alternate branch(es)?: fork
+  language branch(es)?: fork

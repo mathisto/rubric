@@ -1,0 +1,10 @@
+# One hedge says how sure we are. Two say nothing.
+extends: existence
+message: "'%s' stacks hedges. Keep one, or state it."
+level: error
+ignorecase: true
+tokens:
+  - (may|might|could) (potentially|possibly|perhaps)
+  - perhaps (may|might|could)
+  - (somewhat|fairly|rather) (arguably|possibly)
+  - it (may|might|could) (be argued|seem) that

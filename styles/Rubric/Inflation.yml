@@ -1,0 +1,17 @@
+# Inflated words with a plain replacement. Each is sometimes right, so a warning.
+# "Underscore" is left out on purpose: in this book it names the `_` character.
+extends: substitution
+message: "Prefer '%s' to '%s', unless the stronger word is earned."
+level: warning
+ignorecase: true
+swap:
+  leverag(e|es|ed|ing): use
+  utiliz(e|es|ed|ing): use
+  crucial: important
+  pivotal: central
+  intricate: detailed
+  showcas(e|es|ed|ing): show
+  facilitat(e|es|ed|ing): help
+  furthermore: also
+  moreover: also
+  robust: reliable

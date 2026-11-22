@@ -1,0 +1,13 @@
+# A plain present-tense sentence is the promise; its examples are the contract.
+# No RFC 2119 capitals.
+extends: existence
+message: "'%s' is RFC style. State the behavior plainly: 'the parser rejects…'."
+level: error
+ignorecase: false
+tokens:
+  - MUST( NOT)?
+  - SHALL( NOT)?
+  - SHOULD( NOT)?
+  - REQUIRED
+  - RECOMMENDED
+  - OPTIONAL

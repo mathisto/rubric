@@ -1,0 +1,12 @@
+# The reader is a capable programmer. Do not tell them what is easy or obvious.
+extends: existence
+message: "'%s' tells the reader how hard it is. Show it instead."
+level: warning
+ignorecase: true
+tokens:
+  - obviously
+  - of course
+  - clearly
+  - trivially
+  - it(')?s (easy|simple) to
+  - just (add|use|call|write|run)

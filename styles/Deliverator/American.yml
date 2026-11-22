@@ -1,0 +1,58 @@
+# Matt's projects use American spelling everywhere (owner, 2026-11-22).
+# Code spans, file names and identifiers such as `ui/catalogue.css` are not prose
+# and are not checked; rename those only as a deliberate API change.
+extends: substitution
+message: "American spelling: '%s', not '%s'."
+level: error
+ignorecase: true
+swap:
+  colour: color
+  colours: colors
+  coloured: colored
+  behaviour: behavior
+  behaviours: behaviors
+  favour: favor
+  favourite: favorite
+  honour: honor
+  neighbour: neighbor
+  centre: center
+  centres: centers
+  organise: organize
+  organised: organized
+  organisation: organization
+  recognise: recognize
+  recognised: recognized
+  customise: customize
+  customised: customized
+  optimise: optimize
+  optimised: optimized
+  prioritise: prioritize
+  summarise: summarize
+  initialise: initialize
+  serialise: serialize
+  normalise: normalize
+  visualise: visualize
+  standardise: standardize
+  analyse: analyze
+  analysed: analyzed
+  programme: program
+  programmes: programs
+  catalogue: catalog
+  catalogues: catalogs
+  licence: license
+  licences: licenses
+  grey: gray
+  labelled: labeled
+  labelling: labeling
+  modelled: modeled
+  modelling: modeling
+  cancelled: canceled
+  travelled: traveled
+  signalled: signaled
+  levelled: leveled
+  fulfil: fulfill
+  artefact: artifact
+  artefacts: artifacts
+  judgement: judgment
+  whilst: while
+  amongst: among

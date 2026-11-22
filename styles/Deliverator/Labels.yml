@@ -1,0 +1,14 @@
+# voice.md and semantics.md: labels name actions and destinations.
+extends: existence
+message: "'%s' does not name a destination. Name where the link goes."
+link: https://github.com/mathisto/the-deliverator/blob/main/docs/semantics.md#links
+level: error
+ignorecase: true
+scope: link
+tokens:
+  - click here
+  - here
+  - this link
+  - read more
+  - learn more
+  - more info

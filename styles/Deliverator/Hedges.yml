@@ -1,0 +1,13 @@
+# Words that usually weaken a sentence. A suggestion, never a gate.
+extends: existence
+message: "Consider cutting '%s'."
+level: suggestion
+ignorecase: true
+tokens:
+  - very
+  - really
+  - simply
+  - basically
+  - actually
+  - quite
+  - extremely

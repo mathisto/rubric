@@ -1,0 +1,11 @@
+Copied from the-deliverator at commit cd79fd1 (2026-11-22, "Check prose with Vale and standardize on American spelling").
+To re-pin, copy styles/Deliverator and its vocabulary from a newer commit and update this file. SHA-256 of each file:
+648fc45aa818f81b18d06c9989e29b9cdf5f09b2d3d74c41e666f355417c4404 *Deliverator/American.yml
+b409da2feb93538074496b3719bc0b46d782ae58a67e30818a7259693861e66a *Deliverator/Filler.yml
+19a70d842462ee2f6a3823c4e241a2230c875be423685624c42762ad287673a7 *Deliverator/FirstPerson.yml
+b662fbb7454048fa2d208f49b9ce1482a5f17ea1b0a9d47316c38a67da2d2fd6 *Deliverator/Headings.yml
+1aeb8fdd0e9471ce2565431eb49130082e664a0a38143849a08d138bef3b47ae *Deliverator/Hedges.yml
+d4a37e7b6a8637a2b81e2c8762d7722197bf964f30c321ac0e7ca437116164ee *Deliverator/Italics.yml
+15da214d5e92cba846ebd8d93d6db57cbb183e915ced50c874ae9db567557fe0 *Deliverator/Labels.yml
+141ca3a6617c4ce5c0c17dd9d4c9a8efc3898a09ff90cb58dd80e3a2802e9e97 *Deliverator/Marketing.yml
+8fd3901d2dca6cebba4d8b0ffb30473c14c3f33b6e384103281a4a2d24b60fc5 *config/vocabularies/Deliverator/accept.txt

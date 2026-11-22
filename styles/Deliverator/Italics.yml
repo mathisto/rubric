@@ -1,0 +1,11 @@
+# typography.md: running prose stays upright. No decorative italics on titles,
+# names or technical phrases; use wording and paragraph structure for emphasis.
+# Bold and code are not emphasis, so they pass.
+extends: existence
+message: "Running prose stays upright. Remove the italics from '%s'."
+link: https://github.com/mathisto/the-deliverator/blob/main/docs/typography.md#running-prose-stays-upright
+level: warning
+scope: emphasis
+nonword: true
+tokens:
+  - '.+'

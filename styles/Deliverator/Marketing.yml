@@ -1,0 +1,21 @@
+# voice.md: "Avoid generic technology-marketing claims."
+extends: existence
+message: "'%s' is a marketing claim. Say what the thing does instead."
+link: https://github.com/mathisto/the-deliverator/blob/main/docs/voice.md
+level: error
+ignorecase: true
+tokens:
+  - seamless(ly)?
+  - limitless
+  - revolutionar(y|ize|izes|ized)
+  - game[- ]chang(er|ing)
+  - cutting[- ]edge
+  - next[- ]generation
+  - world[- ]class
+  - best[- ]in[- ]class
+  - effortless(ly)?
+  - supercharg(e|es|ed|ing)
+  - unleash(es|ed|ing)?
+  - blazing(ly)?[- ]fast
+  - state[- ]of[- ]the[- ]art
+  - powerful yet simple
