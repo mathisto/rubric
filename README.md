@@ -37,7 +37,7 @@ Code blocks come in three kinds, named on the line that opens the block:
 | `rubric example` | A program that must run and pass |
 | `rubric error` | A program that must fail, with the error shown under it |
 
-GitHub doesn't know Rubric yet, so the code shows without color. The rendered edition, with search and a print view, is at [mathisto.github.io/rubric](https://mathisto.github.io/rubric/).
+GitHub doesn't know Rubric yet, so the code shows without color. The rendered edition, with search and a print view, is at [rubric.mattkelly.io](https://rubric.mattkelly.io/).
 
 The history is part of the book. Each chapter arrives as its own commits, prose first, so the log shows what we promised before it shows what we built.
 
