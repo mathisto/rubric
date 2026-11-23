@@ -6,4 +6,4 @@ level: error
 scope: heading
 nonword: true
 tokens:
-  - '(?<=[^:—–-]\s)(?!(?:Rubric|GitHub|Pages|Sienna|Knuth|Zig|Vale|Incipit|Colophon|Deliverator|Glowdeep|Campo|Matt|Claude|WebAssembly|Markdown|Gherkin|Cucumber|Elixir|Python|Rust|TeX|WEB|CWEB|Quorum|Ohm|Racket|Unicode|UTF)\b)[A-Z][a-z]+\b'
+  - '(?<=[^:—–-]\s)(?!(?:Rubric|GitHub|Pages|Int|Ints|Bool|Bools|Sienna|Knuth|Zig|Vale|Incipit|Colophon|Deliverator|Glowdeep|Campo|Matt|Claude|WebAssembly|Markdown|Gherkin|Cucumber|Elixir|Python|Rust|TeX|WEB|CWEB|Quorum|Ohm|Racket|Unicode|UTF)\b)[A-Z][a-z]+\b'
