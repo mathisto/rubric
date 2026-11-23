@@ -14,7 +14,7 @@ The parser MUST reject a tab inside an indent.
 
 Let's delve into the lexer.
 
-We leverage the tangler to build the compiler.
+We leverage the extractor to build the compiler.
 
 The lexer may potentially accept it.
 

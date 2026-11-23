@@ -1,5 +1,5 @@
-# mdBook builds the public edition of the book; see research/2026-11-22-book-site.md.
-# tools/build-book.sh stages the chapters into .build/src before mdBook runs,
+# mdBook publishes the book's website; see research/2026-11-22-book-site.md.
+# tools/publish.sh stages the chapters into .build/src before mdBook runs,
 # because the Incipit lives at the repo root as README.md.
 [book]
 title = "Rubric"
@@ -13,3 +13,7 @@ create-missing = false
 
 [output.html]
 git-repository-url = "https://github.com/mathisto/rubric"
+
+# Chapters that moved: the old address forwards to the new one.
+[output.html.redirect]
+"/tangle.html" = "code.html"

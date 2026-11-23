@@ -1,4 +1,4 @@
-# Build output from tools/build-book.sh
+# Build output from tools/publish.sh
 /.build/
 
 # Zig build output, if someone runs zig build inside gen

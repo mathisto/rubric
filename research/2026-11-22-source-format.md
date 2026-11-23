@@ -66,3 +66,7 @@ Rejected: `.rubric.md`. It works today, but code must special-case it, editors l
 ## Revised: labels during the bootstrap
 
 Matt decided on 2026-11-22, while planning the first chapter, that implementation blocks name their real language rather than `rubric`. Until Rubric compiles itself, they open with `zig` and a setting: `file=` for the file they belong to, or `slot=` for a slot an earlier block left open. GitHub highlights them as Zig (tested through its Markdown API), and the settings stay hidden. `rubric example`, `rubric error` and `rubric setup` keep their meaning for Rubric programs. Code grows through named slots, in the manner of Knuth's named chunks, rather than by appending alone.
+
+## Renamed: extract and publish
+
+Matt renamed the two literate tools on 2026-11-22, before the second chapter. Knuth called them tangle and weave, and the first chapter used those names, but they describe nothing to a newcomer, and "tangle" names the opposite of what the tool does. The tool that pulls code out of the chapters is now the extractor (`extract`, rule IDs `extract.*`, `tools/extract.sh`), and the tool that builds the website is the publisher (`tools/publish.sh`). The chapter moved from `book/tangle.md` to `book/code.md` and mentions Knuth's names once, as history. Notes in this folder written before the rename keep the old words.

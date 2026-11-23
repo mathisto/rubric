@@ -2,7 +2,7 @@
 
 [Incipit](README.md)
 
-- [The book reads itself](tangle.md)
+- [The book reads itself](code.md)
 
 ---
 

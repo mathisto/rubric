@@ -1,5 +1,5 @@
 #!/bin/sh
-# Build the public edition of the book into .build/site.
+# Publish the book: build its website into .build/site.
 # The Incipit is the repo's README.md; every other chapter lives in book/.
 set -eu
 cd "$(dirname "$0")/.."
@@ -9,4 +9,4 @@ mkdir -p .build/src
 sed "s#](book/#](#g" README.md > .build/src/README.md
 cp book/*.md .build/src/
 mdbook build
-echo "book built: .build/site"
+echo "published: .build/site"

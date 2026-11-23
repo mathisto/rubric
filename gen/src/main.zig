@@ -1,8 +1,8 @@
-// book/tangle.md:834
+// book/code.md:834
 const std = @import("std");
-const tangle = @import("tangle.zig");
+const extract = @import("extract.zig");
 
-const usage = "usage: tangle [--root DIR] [--out DIR] [--through CHAPTER] [--rules]\n";
+const usage = "usage: extract [--root DIR] [--out DIR] [--through CHAPTER] [--rules]\n";
 
 pub fn main(init: std.process.Init) !void {
     const gpa = init.arena.allocator();
@@ -30,12 +30,12 @@ pub fn main(init: std.process.Init) !void {
             through = args[i];
         } else stop(usage);
     }
-    if (!tangle.insideGen(out)) stop("--out must be a plain relative path\n");
+    if (!extract.insideGen(out)) stop("--out must be a plain relative path\n");
 
     const dir = std.Io.Dir.cwd().openDir(io, root, .{}) catch stop("cannot open the book's root folder\n");
     const summary = dir.readFileAlloc(io, "book/SUMMARY.md", gpa, .unlimited) catch stop("cannot read book/SUMMARY.md\n");
-    const order = try tangle.readingOrder(gpa, summary);
-    var chapters: std.ArrayList(tangle.Chapter) = .empty;
+    const order = try extract.readingOrder(gpa, summary);
+    var chapters: std.ArrayList(extract.Chapter) = .empty;
     for (order) |path| {
         const text = dir.readFileAlloc(io, path, gpa, .unlimited) catch {
             std.debug.print("cannot read {s}, which the summary lists\n", .{path});
@@ -44,10 +44,10 @@ pub fn main(init: std.process.Init) !void {
         try chapters.append(gpa, .{ .path = path, .text = text });
     }
 
-    var diag: tangle.Diagnostic = .{};
-    const outputs = tangle.tangle(gpa, &diag, chapters.items, through) catch |err| report(err, diag);
+    var diag: extract.Diagnostic = .{};
+    const outputs = extract.extract(gpa, &diag, chapters.items, through) catch |err| report(err, diag);
     if (rules) {
-        const count = tangle.checkRules(gpa, &diag, chapters.items, outputs) catch |err| report(err, diag);
+        const count = extract.checkRules(gpa, &diag, chapters.items, outputs) catch |err| report(err, diag);
         std.debug.print("{d} rules, each with a check\n", .{count});
     }
 
@@ -57,7 +57,7 @@ pub fn main(init: std.process.Init) !void {
         if (std.fs.path.dirname(path)) |parent| try dir.createDirPath(io, parent);
         try dir.writeFile(io, .{ .sub_path = path, .data = output.bytes });
     }
-    std.debug.print("tangled {d} files into {s}\n", .{ outputs.len, out });
+    std.debug.print("extracted {d} files into {s}\n", .{ outputs.len, out });
 }
 
 fn stop(message: []const u8) noreturn {
@@ -65,10 +65,10 @@ fn stop(message: []const u8) noreturn {
     std.process.exit(2);
 }
 
-fn report(err: tangle.Error, diag: tangle.Diagnostic) noreturn {
+fn report(err: extract.Error, diag: extract.Diagnostic) noreturn {
     switch (err) {
         error.OutOfMemory => std.debug.print("out of memory\n", .{}),
-        error.Tangle => if (diag.path.len > 0)
+        error.Extract => if (diag.path.len > 0)
             std.debug.print("{s}:{d}: {s}\n", .{ diag.path, diag.line, diag.message })
         else
             std.debug.print("{s}\n", .{diag.message}),
@@ -77,5 +77,5 @@ fn report(err: tangle.Error, diag: tangle.Diagnostic) noreturn {
 }
 
 test {
-    _ = tangle;
+    _ = extract;
 }

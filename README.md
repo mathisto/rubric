@@ -27,7 +27,7 @@ Every chapter goes through the same steps:
 
 ## How to read it
 
-Read it on GitHub, in order, starting here and continuing with [The book reads itself](book/tangle.md). Each chapter is an ordinary Markdown file and renders here as a page.
+Read it on GitHub, in order, starting here and continuing with [The book reads itself](book/code.md). Each chapter is an ordinary Markdown file and renders here as a page.
 
 The line that opens a code block says what the block is:
 
@@ -52,6 +52,6 @@ Rejected ideas stay in the book. A list of them, and a list of what Rubric will 
 
 ## Status
 
-The first chapter, [The book reads itself](book/tangle.md), builds the tangler: the tool that pulls code out of the chapters into `gen`, and checks on every commit that the two agree. The language itself has no syntax yet, no interpreter and no examples. The tool that runs examples arrives with the first chapter that can run a Rubric program.
+The first chapter, [The book reads itself](book/code.md), builds the extractor: the tool that pulls code out of the chapters into `gen`, and checks on every commit that the two agree. The language itself has no syntax yet, no interpreter and no examples. The tool that runs examples arrives with the first chapter that can run a Rubric program.
 
 The bootstrap is written in Zig 0.17.1, pinned. Zig is the scaffolding, not the destination.

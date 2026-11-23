@@ -1,4 +1,4 @@
-// book/tangle.md:32
+// book/code.md:32
 const std = @import("std");
 const Allocator = std.mem.Allocator;
 
@@ -8,14 +8,14 @@ pub const Chapter = struct {
     text: []const u8,
 };
 
-/// What went wrong, and where. The tangler stops at the first mistake.
+/// What went wrong, and where. The extractor stops at the first mistake.
 pub const Diagnostic = struct {
     path: []const u8 = "",
     line: usize = 0,
     message: []const u8 = "",
 };
 
-pub const Error = error{ Tangle, OutOfMemory };
+pub const Error = error{ Extract, OutOfMemory };
 
 fn fail(
     gpa: Allocator,
@@ -27,9 +27,9 @@ fn fail(
 ) Error {
     const message = std.fmt.allocPrint(gpa, fmt, args) catch return error.OutOfMemory;
     diag.* = .{ .path = path, .line = line, .message = message };
-    return error.Tangle;
+    return error.Extract;
 }
-// book/tangle.md:67
+// book/code.md:67
 /// The chapters in reading order: the Incipit, then each chapter the
 /// summary lists, as paths from the root of the repository.
 pub fn readingOrder(gpa: Allocator, summary: []const u8) Error![]const []const u8 {
@@ -54,7 +54,7 @@ test "book.order" {
         \\
         \\[Incipit](README.md)
         \\
-        \\- [The book reads itself](tangle.md)
+        \\- [The book reads itself](code.md)
         \\- [A draft]()
         \\
         \\---
@@ -64,10 +64,10 @@ test "book.order" {
     const order = try readingOrder(arena.allocator(), summary);
     try std.testing.expectEqual(@as(usize, 3), order.len);
     try std.testing.expectEqualStrings("README.md", order[0]);
-    try std.testing.expectEqualStrings("book/tangle.md", order[1]);
+    try std.testing.expectEqualStrings("book/code.md", order[1]);
     try std.testing.expectEqualStrings("book/colophon.md", order[2]);
 }
-// book/tangle.md:139
+// book/code.md:139
 /// A fenced code block, with its label read.
 pub const Block = struct {
     chapter: []const u8,
@@ -93,12 +93,12 @@ pub const Heading = struct {
     text: []const u8,
 };
 
-/// Everything the tangler needs from one chapter.
+/// Everything the extractor needs from one chapter.
 pub const Parsed = struct {
     blocks: []const Block,
     headings: []const Heading,
 };
-// book/tangle.md:174
+// book/code.md:174
 const Fence = struct {
     char: u8,
     len: usize,
@@ -134,7 +134,7 @@ fn headingAt(line: []const u8, number: usize) ?Heading {
     if (level == 0 or level > 6 or level == text.len or text[level] != ' ') return null;
     return .{ .level = level, .line = number, .text = std.mem.trim(u8, text[level..], " ") };
 }
-// book/tangle.md:214
+// book/code.md:214
 /// Lowercase words separated by dots, like `lexer.cases`.
 pub fn validName(name: []const u8) bool {
     if (name.len == 0) return false;
@@ -182,7 +182,7 @@ fn readLabel(
         return fail(gpa, diag, chapter, line, "a block has both file= and slot=; it may have one", .{});
     block.words = words.items;
 }
-// book/tangle.md:266
+// book/code.md:266
 /// Reads a chapter's code blocks and headings.
 pub fn parse(gpa: Allocator, diag: *Diagnostic, chapter: Chapter) Error!Parsed {
     var blocks: std.ArrayList(Block) = .empty;
@@ -265,10 +265,10 @@ test "book.blocks" {
         "```zig file=a.zig\nconst a = 1;\n",
         "```\ntext\n```\n",
     }) |bad| {
-        try std.testing.expectError(error.Tangle, parse(gpa, &diag, .{ .path = "t", .text = bad }));
+        try std.testing.expectError(error.Extract, parse(gpa, &diag, .{ .path = "t", .text = bad }));
     }
 }
-// book/tangle.md:372
+// book/code.md:372
 /// A path for a file under `gen`: relative, and never climbing out.
 pub fn insideGen(path: []const u8) bool {
     if (path.len == 0 or path[0] == '/' or std.mem.indexOfScalar(u8, path, '\\') != null) return false;
@@ -279,17 +279,17 @@ pub fn insideGen(path: []const u8) bool {
     return true;
 }
 
-/// One file the tangler writes.
+/// One file the extractor writes.
 pub const Output = struct {
     path: []const u8,
     bytes: []const u8,
 };
-// book/tangle.md:392
+// book/code.md:392
 const Writer = struct {
     gpa: Allocator,
     diag: *Diagnostic,
     out: std.ArrayList(u8) = .empty,
-    // book/tangle.md:529
+    // book/code.md:529
     fills: std.StringHashMapUnmanaged(std.ArrayList(Block)) = .empty,
     opened: std.StringHashMapUnmanaged(Where) = .empty,
     filling: std.StringHashMapUnmanaged(void) = .empty,
@@ -304,10 +304,10 @@ const Writer = struct {
     }
 
     fn block(w: *Writer, b: Block, indent: []const u8) Error!void {
-        // book/tangle.md:641
+        // book/code.md:641
         try w.line(indent, try std.fmt.allocPrint(w.gpa, "// {s}:{d}", .{ b.chapter, b.line }));
         for (b.lines, 0..) |text, n| {
-            // book/tangle.md:559
+            // book/code.md:559
             if (try w.slotIn(b, n, text)) |slot| {
                 const deeper = try std.mem.concat(w.gpa, u8, &.{ indent, slot.indent });
                 try w.fill(slot.name, .{ .chapter = b.chapter, .line = b.line + n }, deeper);
@@ -317,7 +317,7 @@ const Writer = struct {
         }
     }
 
-    // book/tangle.md:569
+    // book/code.md:569
     /// If this line opens a slot, its indentation and name.
     fn slotIn(w: *Writer, b: Block, n: usize, text: []const u8) Error!?SlotLine {
         const body = std.mem.trimStart(u8, text, " \t");
@@ -342,7 +342,7 @@ const Writer = struct {
         for (blocks.items) |b| try w.block(b, indent);
     }
 };
-// book/tangle.md:422
+// book/code.md:422
 fn writeFiles(gpa: Allocator, diag: *Diagnostic, blocks: []const Block) Error![]const Output {
     var w: Writer = .{ .gpa = gpa, .diag = diag };
     var paths: std.ArrayList([]const u8) = .empty;
@@ -358,7 +358,7 @@ fn writeFiles(gpa: Allocator, diag: *Diagnostic, blocks: []const Block) Error![]
             }
             try entry.value_ptr.append(gpa, b);
         }
-        // book/tangle.md:549
+        // book/code.md:549
         if (b.slot) |name| {
             const entry = try w.fills.getOrPut(gpa, name);
             if (!entry.found_existing) entry.value_ptr.* = .empty;
@@ -371,7 +371,7 @@ fn writeFiles(gpa: Allocator, diag: *Diagnostic, blocks: []const Block) Error![]
         for (by_path.get(path).?.items) |b| try w.block(b, "");
         try outputs.append(gpa, .{ .path = path, .bytes = w.out.items });
     }
-    // book/tangle.md:597
+    // book/code.md:597
     for (blocks) |b| {
         const name = b.slot orelse continue;
         if (!w.opened.contains(name))
@@ -380,20 +380,20 @@ fn writeFiles(gpa: Allocator, diag: *Diagnostic, blocks: []const Block) Error![]
     return outputs.items;
 }
 
-/// Tangles the chapters, in order, into the files they build.
-pub fn tangle(
+/// Extracts the chapters, in order, into the files they build.
+pub fn extract(
     gpa: Allocator,
     diag: *Diagnostic,
     chapters: []const Chapter,
     through: ?[]const u8,
 ) Error![]const Output {
     var blocks: std.ArrayList(Block) = .empty;
-    // book/tangle.md:697
+    // book/code.md:697
     var stopped = through == null;
     for (chapters) |chapter| {
         const parsed = try parse(gpa, diag, chapter);
         try blocks.appendSlice(gpa, parsed.blocks);
-        // book/tangle.md:701
+        // book/code.md:701
         if (through) |name| {
             if (std.mem.eql(u8, chapter.path, name) or std.mem.eql(u8, std.fs.path.basename(chapter.path), name)) {
                 stopped = true;
@@ -401,25 +401,25 @@ pub fn tangle(
             }
         }
     }
-    // book/tangle.md:710
+    // book/code.md:710
     if (!stopped) return fail(gpa, diag, "", 0, "the book has no chapter named '{s}'", .{through.?});
     return writeFiles(gpa, diag, blocks.items);
 }
 
-fn testTangle(gpa: Allocator, texts: []const []const u8, through: ?[]const u8) ![]const Output {
+fn testExtract(gpa: Allocator, texts: []const []const u8, through: ?[]const u8) ![]const Output {
     var chapters: std.ArrayList(Chapter) = .empty;
     for (texts, 0..) |text, n| {
         try chapters.append(gpa, .{ .path = try std.fmt.allocPrint(gpa, "book/{d}.md", .{n + 1}), .text = text });
     }
     var diag: Diagnostic = .{};
-    return tangle(gpa, &diag, chapters.items, through);
+    return extract(gpa, &diag, chapters.items, through);
 }
 
-test "tangle.files" {
+test "extract.files" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const gpa = arena.allocator();
-    const outputs = try testTangle(gpa, &.{
+    const outputs = try testExtract(gpa, &.{
         "```zig file=src/a.zig\nconst a = 1;\n```\n```zig file=src/b.zig\nconst b = 2;\n```\n",
         "```zig file=src/a.zig\nconst c = 3;\n```\n",
     }, null);
@@ -431,10 +431,10 @@ test "tangle.files" {
     );
     for ([_][]const u8{ "/etc/a.zig", "src/../../a.zig", "src//a.zig" }) |bad| {
         const text = try std.fmt.allocPrint(gpa, "```zig file={s}\n```\n", .{bad});
-        try std.testing.expectError(error.Tangle, testTangle(gpa, &.{text}, null));
+        try std.testing.expectError(error.Extract, testExtract(gpa, &.{text}, null));
     }
 }
-// book/tangle.md:535
+// book/code.md:535
 const Where = struct {
     chapter: []const u8,
     line: usize,
@@ -444,12 +444,12 @@ const SlotLine = struct {
     indent: []const u8,
     name: []const u8,
 };
-// book/tangle.md:605
-test "tangle.slots" {
+// book/code.md:605
+test "extract.slots" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const gpa = arena.allocator();
-    const outputs = try testTangle(gpa, &.{
+    const outputs = try testExtract(gpa, &.{
         "```zig file=src/s.zig\nswitch (c) {\n    // slot: lexer.cases\n    else => {},\n}\n// slot: later\n```\n",
         "```zig slot=lexer.cases\n'a' => {},\n```\n```zig slot=lexer.cases\n'b' => {},\n```\n",
     }, null);
@@ -462,18 +462,18 @@ test "tangle.slots" {
         "```zig file=a.zig\n```\n```zig slot=nowhere\n```\n",
         "```zig file=a.zig\n// slot: x\n```\n```zig slot=x\n// slot: y\n```\n```zig slot=y\n// slot: x\n```\n",
     }) |bad| {
-        try std.testing.expectError(error.Tangle, testTangle(gpa, &.{bad}, null));
+        try std.testing.expectError(error.Extract, testExtract(gpa, &.{bad}, null));
     }
 }
-// book/tangle.md:645
-test "tangle.origin" {
+// book/code.md:645
+test "extract.origin" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
-    const outputs = try testTangle(arena.allocator(), &.{"prose\n\n```zig file=a.zig\nconst a = 1;\n```\n"}, null);
+    const outputs = try testExtract(arena.allocator(), &.{"prose\n\n```zig file=a.zig\nconst a = 1;\n```\n"}, null);
     try std.testing.expectEqualStrings("// book/1.md:4\nconst a = 1;\n", outputs[0].bytes);
 }
-// book/tangle.md:664
-test "tangle.check" {
+// book/code.md:664
+test "extract.check" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const gpa = arena.allocator();
@@ -481,16 +481,16 @@ test "tangle.check" {
         "```zig file=b.zig\n// slot: one\n```\n```zig file=a.zig\nconst a = 1;\n```\n",
         "```zig slot=one\nconst b = 2;\n```\n```zig file=b.zig\nconst c = 3;\n```\n",
     };
-    const first = try testTangle(gpa, book, null);
-    const second = try testTangle(gpa, book, null);
+    const first = try testExtract(gpa, book, null);
+    const second = try testExtract(gpa, book, null);
     try std.testing.expectEqual(first.len, second.len);
     for (first, second) |x, y| {
         try std.testing.expectEqualStrings(x.path, y.path);
         try std.testing.expectEqualStrings(x.bytes, y.bytes);
     }
 }
-// book/tangle.md:714
-test "tangle.snapshots" {
+// book/code.md:714
+test "extract.snapshots" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const gpa = arena.allocator();
@@ -498,14 +498,14 @@ test "tangle.snapshots" {
         "```zig file=a.zig\nconst a = 1;\n// slot: later\n```\n",
         "```zig slot=later\nconst b = 2;\n```\n```zig file=b.zig\nconst c = 3;\n```\n",
     };
-    const early = try testTangle(gpa, book, "1.md");
+    const early = try testExtract(gpa, book, "1.md");
     try std.testing.expectEqual(@as(usize, 1), early.len);
     try std.testing.expectEqualStrings("// book/1.md:2\nconst a = 1;\n", early[0].bytes);
-    const whole = try testTangle(gpa, book, "book/2.md");
+    const whole = try testExtract(gpa, book, "book/2.md");
     try std.testing.expectEqual(@as(usize, 2), whole.len);
-    try std.testing.expectError(error.Tangle, testTangle(gpa, book, "nowhere.md"));
+    try std.testing.expectError(error.Extract, testExtract(gpa, book, "nowhere.md"));
 }
-// book/tangle.md:750
+// book/code.md:750
 /// The ID a heading carries, if its text starts with an anchor.
 fn ruleId(gpa: Allocator, diag: *Diagnostic, chapter: []const u8, heading: Heading) Error!?[]const u8 {
     const open = "<a id=\"";
@@ -574,6 +574,6 @@ test "book.rules" {
     };
     const covered: []const Output = &.{.{ .path = "t.zig", .bytes = "test \"a.two\" {}\n" }};
     try std.testing.expectEqual(@as(usize, 2), try checkRules(gpa, &diag, &.{chapter}, covered));
-    try std.testing.expectError(error.Tangle, checkRules(gpa, &diag, &.{chapter}, &.{}));
-    try std.testing.expectError(error.Tangle, checkRules(gpa, &diag, &.{ chapter, chapter }, covered));
+    try std.testing.expectError(error.Extract, checkRules(gpa, &diag, &.{chapter}, &.{}));
+    try std.testing.expectError(error.Extract, checkRules(gpa, &diag, &.{ chapter, chapter }, covered));
 }

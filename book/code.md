@@ -1,34 +1,34 @@
 # The book reads itself
 
-By the end of this chapter, the book can build its own source code. A program called the tangler reads every chapter in order, collects the code blocks, and writes them out as ordinary Zig files in a folder called `gen`. The first program it builds is itself.
+By the end of this chapter, the book can build its own source code. A program called the extractor reads every chapter in order, collects the code blocks, and writes them out as ordinary Zig files in a folder called `gen`. The first program it builds is itself.
 
-The name comes from Knuth. His literate programs had two tools: one that wove the book into a typeset document, and one that tangled it into code a compiler could read. mdBook does our weaving for now. This chapter writes the tangler.
+Knuth's literate programs had the same two steps, which he called tangle and weave: one pulled out code a compiler could read, the other typeset the book. This book calls them what they do. The extractor pulls the code out, and the publisher builds the website; mdBook does our publishing for now. This chapter writes the extractor.
 
-This chapter is about books, not about Rubric, so it has no Rubric examples. Each rule below is checked by a Zig test that carries the rule's ID as its name. The tangler's code sits under the rule it carries out, in Zig, the language of the bootstrap.
+This chapter is about books, not about Rubric, so it has no Rubric examples. Each rule below is checked by a Zig test that carries the rule's ID as its name. The extractor's code sits under the rule it carries out, in Zig, the language of the bootstrap.
 
 ## <a id="book.order"></a>The order of the book
 
-The tangler reads the chapters in the order a reader meets them: `README.md` first, then every chapter listed in `book/SUMMARY.md`, from top to bottom.
+The extractor reads the chapters in the order a reader meets them: `README.md` first, then every chapter listed in `book/SUMMARY.md`, from top to bottom.
 
 ```markdown
 # Summary
 
 [Incipit](README.md)
 
-- [The book reads itself](tangle.md)
+- [The book reads itself](code.md)
 
 ---
 
 [Colophon](colophon.md)
 ```
 
-The Incipit is listed in the summary for the rendered edition, but it lives at the root of the repository, so the tangler reads it from there. A chapter that the summary doesn't list is not part of the book, and the tangler ignores it. So is a draft, which mdBook writes as a link with no target.
+The Incipit is listed in the summary for the rendered edition, but it lives at the root of the repository, so the extractor reads it from there. A chapter that the summary doesn't list is not part of the book, and the extractor ignores it. So is a draft, which mdBook writes as a link with no target.
 
 Order matters because later chapters add to code that earlier chapters started. When two blocks add to the same place, the one a reader meets first comes first.
 
-The tangler's library starts here. A chapter is a path and its text. When the tangler finds a mistake, it records where and stops.
+The extractor's library starts here. A chapter is a path and its text. When the extractor finds a mistake, it records where and stops.
 
-```zig file=src/tangle.zig
+```zig file=src/extract.zig
 const std = @import("std");
 const Allocator = std.mem.Allocator;
 
@@ -38,14 +38,14 @@ pub const Chapter = struct {
     text: []const u8,
 };
 
-/// What went wrong, and where. The tangler stops at the first mistake.
+/// What went wrong, and where. The extractor stops at the first mistake.
 pub const Diagnostic = struct {
     path: []const u8 = "",
     line: usize = 0,
     message: []const u8 = "",
 };
 
-pub const Error = error{ Tangle, OutOfMemory };
+pub const Error = error{ Extract, OutOfMemory };
 
 fn fail(
     gpa: Allocator,
@@ -57,13 +57,13 @@ fn fail(
 ) Error {
     const message = std.fmt.allocPrint(gpa, fmt, args) catch return error.OutOfMemory;
     diag.* = .{ .path = path, .line = line, .message = message };
-    return error.Tangle;
+    return error.Extract;
 }
 ```
 
 The order comes from the links in the summary, one per line.
 
-```zig file=src/tangle.zig
+```zig file=src/extract.zig
 /// The chapters in reading order: the Incipit, then each chapter the
 /// summary lists, as paths from the root of the repository.
 pub fn readingOrder(gpa: Allocator, summary: []const u8) Error![]const []const u8 {
@@ -88,7 +88,7 @@ test "book.order" {
         \\
         \\[Incipit](README.md)
         \\
-        \\- [The book reads itself](tangle.md)
+        \\- [The book reads itself](code.md)
         \\- [A draft]()
         \\
         \\---
@@ -98,7 +98,7 @@ test "book.order" {
     const order = try readingOrder(arena.allocator(), summary);
     try std.testing.expectEqual(@as(usize, 3), order.len);
     try std.testing.expectEqualStrings("README.md", order[0]);
-    try std.testing.expectEqualStrings("book/tangle.md", order[1]);
+    try std.testing.expectEqualStrings("book/code.md", order[1]);
     try std.testing.expectEqualStrings("book/colophon.md", order[2]);
 }
 ```
@@ -116,9 +116,9 @@ The words after the language describe the block. A word written `key=value` is a
 | `file=src/main.zig` | The block's lines go into this file |
 | `slot=lexer.cases` | The block's lines fill this slot, wherever an earlier block left it open |
 
-A block has one or the other, never both. Any other setting is an error, so that a misspelled `file=` can't quietly drop code. A word without `=`, like the `example` in `rubric example`, is a note for other tools, and the tangler keeps it for them.
+A block has one or the other, never both. Any other setting is an error, so that a misspelled `file=` can't quietly drop code. A word without `=`, like the `example` in `rubric example`, is a note for other tools, and the extractor keeps it for them.
 
-A block with neither setting is an illustration: the tangler skips it. This chapter has many illustrations, like the summary above.
+A block with neither setting is an illustration: the extractor skips it. This chapter has many illustrations, like the summary above.
 
 A block can contain other blocks, when its fence is longer than theirs. Only the outer block counts:
 
@@ -127,15 +127,15 @@ The fence of this block has four backticks, so the three-backtick
 block inside it is text, not code:
 
 ```zig file=src/never.zig
-const never = "this line is not tangled";
+const never = "this line is not extracted";
 ```
 ````
 
-A block that never closes is an error. CommonMark would let it run to the end of the chapter, but for the tangler that would swallow everything after it.
+A block that never closes is an error. CommonMark would let it run to the end of the chapter, but for the extractor that would swallow everything after it.
 
 Each block remembers its chapter and the line where its code begins, for the messages and comments below.
 
-```zig file=src/tangle.zig
+```zig file=src/extract.zig
 /// A fenced code block, with its label read.
 pub const Block = struct {
     chapter: []const u8,
@@ -161,7 +161,7 @@ pub const Heading = struct {
     text: []const u8,
 };
 
-/// Everything the tangler needs from one chapter.
+/// Everything the extractor needs from one chapter.
 pub const Parsed = struct {
     blocks: []const Block,
     headings: []const Heading,
@@ -170,7 +170,7 @@ pub const Parsed = struct {
 
 A fence is up to three spaces, then a run of at least three backticks or tildes. A backtick fence's label may not contain a backtick.
 
-```zig file=src/tangle.zig
+```zig file=src/extract.zig
 const Fence = struct {
     char: u8,
     len: usize,
@@ -210,7 +210,7 @@ fn headingAt(line: []const u8, number: usize) ?Heading {
 
 Slot names, and the rule IDs further on, share one shape: lowercase words separated by dots.
 
-```zig file=src/tangle.zig
+```zig file=src/extract.zig
 /// Lowercase words separated by dots, like `lexer.cases`.
 pub fn validName(name: []const u8) bool {
     if (name.len == 0) return false;
@@ -260,9 +260,9 @@ fn readLabel(
 }
 ```
 
-Reading a chapter is one pass over its lines. Outside a block, the tangler notes headings; inside one, it collects lines until the fence closes. A block's lines lose the indentation its opening fence had, as CommonMark says.
+Reading a chapter is one pass over its lines. Outside a block, the extractor notes headings; inside one, it collects lines until the fence closes. A block's lines lose the indentation its opening fence had, as CommonMark says.
 
-```zig file=src/tangle.zig
+```zig file=src/extract.zig
 /// Reads a chapter's code blocks and headings.
 pub fn parse(gpa: Allocator, diag: *Diagnostic, chapter: Chapter) Error!Parsed {
     var blocks: std.ArrayList(Block) = .empty;
@@ -345,12 +345,12 @@ test "book.blocks" {
         "```zig file=a.zig\nconst a = 1;\n",
         "```\ntext\n```\n",
     }) |bad| {
-        try std.testing.expectError(error.Tangle, parse(gpa, &diag, .{ .path = "t", .text = bad }));
+        try std.testing.expectError(error.Extract, parse(gpa, &diag, .{ .path = "t", .text = bad }));
     }
 }
 ```
 
-## <a id="tangle.files"></a>Blocks that start and grow files
+## <a id="extract.files"></a>Blocks that start and grow files
 
 A block with `file=` adds its lines to the end of that file. The first such block for a path creates the file; each later one, in book order, appends to it.
 
@@ -364,11 +364,11 @@ pub fn main() void {
 }
 ```
 
-From those two blocks, the tangler writes `gen/src/hello.zig` with all four lines of code, in that order, each block headed by a comment that says where it came from. These two blocks are real, and `gen/src/hello.zig` exists because this chapter does.
+From those two blocks, the extractor writes `gen/src/hello.zig` with all four lines of code, in that order, each block headed by a comment that says where it came from. These two blocks are real, and `gen/src/hello.zig` exists because this chapter does.
 
-A path is relative to `gen`. It may not start with `/`, and no part of it may be `..` or empty. A path that breaks either rule is an error, and the tangler names the chapter and line where it appears.
+A path is relative to `gen`. It may not start with `/`, and no part of it may be `..` or empty. A path that breaks either rule is an error, and the extractor names the chapter and line where it appears.
 
-```zig file=src/tangle.zig
+```zig file=src/extract.zig
 /// A path for a file under `gen`: relative, and never climbing out.
 pub fn insideGen(path: []const u8) bool {
     if (path.len == 0 or path[0] == '/' or std.mem.indexOfScalar(u8, path, '\\') != null) return false;
@@ -379,7 +379,7 @@ pub fn insideGen(path: []const u8) bool {
     return true;
 }
 
-/// One file the tangler writes.
+/// One file the extractor writes.
 pub const Output = struct {
     path: []const u8,
     bytes: []const u8,
@@ -388,7 +388,7 @@ pub const Output = struct {
 
 The writer turns blocks into lines. It leaves two slots open, for the sections on slots and origins to fill.
 
-```zig file=src/tangle.zig
+```zig file=src/extract.zig
 const Writer = struct {
     gpa: Allocator,
     diag: *Diagnostic,
@@ -418,7 +418,7 @@ const Writer = struct {
 
 Files come out in the order they first appear in the book, each with its blocks in book order.
 
-```zig file=src/tangle.zig
+```zig file=src/extract.zig
 fn writeFiles(gpa: Allocator, diag: *Diagnostic, blocks: []const Block) Error![]const Output {
     var w: Writer = .{ .gpa = gpa, .diag = diag };
     var paths: std.ArrayList([]const u8) = .empty;
@@ -446,38 +446,38 @@ fn writeFiles(gpa: Allocator, diag: *Diagnostic, blocks: []const Block) Error![]
     return outputs.items;
 }
 
-/// Tangles the chapters, in order, into the files they build.
-pub fn tangle(
+/// Extracts the chapters, in order, into the files they build.
+pub fn extract(
     gpa: Allocator,
     diag: *Diagnostic,
     chapters: []const Chapter,
     through: ?[]const u8,
 ) Error![]const Output {
     var blocks: std.ArrayList(Block) = .empty;
-    // slot: tangle.before
+    // slot: extract.before
     for (chapters) |chapter| {
         const parsed = try parse(gpa, diag, chapter);
         try blocks.appendSlice(gpa, parsed.blocks);
-        // slot: tangle.after-chapter
+        // slot: extract.after-chapter
     }
-    // slot: tangle.after-book
+    // slot: extract.after-book
     return writeFiles(gpa, diag, blocks.items);
 }
 
-fn testTangle(gpa: Allocator, texts: []const []const u8, through: ?[]const u8) ![]const Output {
+fn testExtract(gpa: Allocator, texts: []const []const u8, through: ?[]const u8) ![]const Output {
     var chapters: std.ArrayList(Chapter) = .empty;
     for (texts, 0..) |text, n| {
         try chapters.append(gpa, .{ .path = try std.fmt.allocPrint(gpa, "book/{d}.md", .{n + 1}), .text = text });
     }
     var diag: Diagnostic = .{};
-    return tangle(gpa, &diag, chapters.items, through);
+    return extract(gpa, &diag, chapters.items, through);
 }
 
-test "tangle.files" {
+test "extract.files" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const gpa = arena.allocator();
-    const outputs = try testTangle(gpa, &.{
+    const outputs = try testExtract(gpa, &.{
         "```zig file=src/a.zig\nconst a = 1;\n```\n```zig file=src/b.zig\nconst b = 2;\n```\n",
         "```zig file=src/a.zig\nconst c = 3;\n```\n",
     }, null);
@@ -489,12 +489,12 @@ test "tangle.files" {
     );
     for ([_][]const u8{ "/etc/a.zig", "src/../../a.zig", "src//a.zig" }) |bad| {
         const text = try std.fmt.allocPrint(gpa, "```zig file={s}\n```\n", .{bad});
-        try std.testing.expectError(error.Tangle, testTangle(gpa, &.{text}, null));
+        try std.testing.expectError(error.Extract, testExtract(gpa, &.{text}, null));
     }
 }
 ```
 
-## <a id="tangle.slots"></a>Slots
+## <a id="extract.slots"></a>Slots
 
 Appending to the end of a file isn't enough. Chapter 5 will need to add a case to a `switch` that chapter 2 wrote, in the middle of a file. For that, code leaves a slot open:
 
@@ -513,7 +513,7 @@ A later block fills the slot by naming it:
 '_' => return self.lexInteger(),
 ```
 
-When this block is labeled `zig slot=lexer.cases`, the tangler replaces the slot line with the block's lines, indented to match the slot. Every block that names the same slot is placed there, in book order. A block that fills a slot may leave slots of its own.
+When this block is labeled `zig slot=lexer.cases`, the extractor replaces the slot line with the block's lines, indented to match the slot. Every block that names the same slot is placed there, in book order. A block that fills a slot may leave slots of its own.
 
 Three mistakes are errors, and each names the chapter and line:
 
@@ -523,7 +523,7 @@ Three mistakes are errors, and each names the chapter and line:
 
 A slot that nothing fills yet is not an error. It is where a later chapter will write, and until then it produces no lines.
 
-The tangler's own code uses slots: the writer above left four of them open, and this section fills three. First, the writer learns which blocks fill which slots, which slots it has opened, and which it is filling now:
+The extractor's own code uses slots: the writer above left four of them open, and this section fills three. First, the writer learns which blocks fill which slots, which slots it has opened, and which it is filling now:
 
 ```zig slot=write.fields
 fills: std.StringHashMapUnmanaged(std.ArrayList(Block)) = .empty,
@@ -531,7 +531,7 @@ opened: std.StringHashMapUnmanaged(Where) = .empty,
 filling: std.StringHashMapUnmanaged(void) = .empty,
 ```
 
-```zig file=src/tangle.zig
+```zig file=src/extract.zig
 const Where = struct {
     chapter: []const u8,
     line: usize,
@@ -601,12 +601,12 @@ for (blocks) |b| {
 }
 ```
 
-```zig file=src/tangle.zig
-test "tangle.slots" {
+```zig file=src/extract.zig
+test "extract.slots" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const gpa = arena.allocator();
-    const outputs = try testTangle(gpa, &.{
+    const outputs = try testExtract(gpa, &.{
         "```zig file=src/s.zig\nswitch (c) {\n    // slot: lexer.cases\n    else => {},\n}\n// slot: later\n```\n",
         "```zig slot=lexer.cases\n'a' => {},\n```\n```zig slot=lexer.cases\n'b' => {},\n```\n",
     }, null);
@@ -619,17 +619,17 @@ test "tangle.slots" {
         "```zig file=a.zig\n```\n```zig slot=nowhere\n```\n",
         "```zig file=a.zig\n// slot: x\n```\n```zig slot=x\n// slot: y\n```\n```zig slot=y\n// slot: x\n```\n",
     }) |bad| {
-        try std.testing.expectError(error.Tangle, testTangle(gpa, &.{bad}, null));
+        try std.testing.expectError(error.Extract, testExtract(gpa, &.{bad}, null));
     }
 }
 ```
 
-## <a id="tangle.origin"></a>Where each line came from
+## <a id="extract.origin"></a>Where each line came from
 
-Every block the tangler writes starts with a comment that names the chapter, and the line where the block's code begins. This is the start of `gen/src/hello.zig`:
+Every block the extractor writes starts with a comment that names the chapter, and the line where the block's code begins. This is the start of `gen/src/hello.zig`:
 
 ```zig
-// book/tangle.md:358
+// book/code.md:358
 const std = @import("std");
 ```
 
@@ -641,27 +641,27 @@ A block that fills a slot gets its comment too, at the slot's indentation:
 try w.line(indent, try std.fmt.allocPrint(w.gpa, "// {s}:{d}", .{ b.chapter, b.line }));
 ```
 
-```zig file=src/tangle.zig
-test "tangle.origin" {
+```zig file=src/extract.zig
+test "extract.origin" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
-    const outputs = try testTangle(arena.allocator(), &.{"prose\n\n```zig file=a.zig\nconst a = 1;\n```\n"}, null);
+    const outputs = try testExtract(arena.allocator(), &.{"prose\n\n```zig file=a.zig\nconst a = 1;\n```\n"}, null);
     try std.testing.expectEqualStrings("// book/1.md:4\nconst a = 1;\n", outputs[0].bytes);
 }
 ```
 
-## <a id="tangle.check"></a>The tangler tangles itself
+## <a id="extract.check"></a>The book and `gen` always agree
 
 The folder `gen` is committed, so anyone can read the implementation as ordinary source, without the book. That creates a risk: someone edits `gen` directly, and the book and the code drift apart. Knuth's tools had this problem, and it is the oldest complaint about literate programming.
 
-The gate closes it. On every commit it builds the tangler from `gen`, runs it on the book into a fresh folder, and compares the result with `gen`. If a single byte differs, the commit fails.
+The gate closes it. On every commit it builds the extractor from `gen`, runs it on the book into a fresh folder, and compares the result with `gen`. If a single byte differs, the commit fails.
 
-This works because the tangler is in the book. When a chapter changes the tangler, the gate builds the old one from `gen`, which writes the new one into the fresh folder, and the two differ. Running the tangler again updates `gen`, and the next run of the gate builds the new tangler, which must reproduce itself exactly. The book and its code can only agree.
+This works because the extractor is in the book. When a chapter changes the extractor, the gate builds the old one from `gen`, which writes the new one into the fresh folder, and the two differ. Running the extractor again updates `gen`, and the next run of the gate builds the new extractor, which must reproduce itself exactly. The book and its code can only agree.
 
-The comparison only means something if the tangler gives the same bytes every time it runs on the same book. Nothing in it depends on the clock, the machine or the order of a hash table, and a test holds it to that:
+The comparison only means something if the extractor gives the same bytes every time it runs on the same book. Nothing in it depends on the clock, the machine or the order of a hash table, and a test holds it to that:
 
-```zig file=src/tangle.zig
-test "tangle.check" {
+```zig file=src/extract.zig
+test "extract.check" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const gpa = arena.allocator();
@@ -669,8 +669,8 @@ test "tangle.check" {
         "```zig file=b.zig\n// slot: one\n```\n```zig file=a.zig\nconst a = 1;\n```\n",
         "```zig slot=one\nconst b = 2;\n```\n```zig file=b.zig\nconst c = 3;\n```\n",
     };
-    const first = try testTangle(gpa, book, null);
-    const second = try testTangle(gpa, book, null);
+    const first = try testExtract(gpa, book, null);
+    const second = try testExtract(gpa, book, null);
     try std.testing.expectEqual(first.len, second.len);
     for (first, second) |x, y| {
         try std.testing.expectEqualStrings(x.path, y.path);
@@ -679,25 +679,25 @@ test "tangle.check" {
 }
 ```
 
-There was no tangler to write the first `gen`. A short throwaway script, written by Claude and never committed, followed this chapter's rules and wrote it once. The tangler built from that `gen` then had to reproduce it exactly, so the first run of the gate was also a check of two separate tanglers against each other. From then on, the tangler writes `gen`.
+There was no extractor to write the first `gen`. A short throwaway script, written by Claude and never committed, followed this chapter's rules and wrote it once. The extractor built from that `gen` then had to reproduce it exactly, so the first run of the gate was also a check of two separate extractors against each other. From then on, the extractor writes `gen`.
 
-## <a id="tangle.snapshots"></a>The program at any chapter
+## <a id="extract.snapshots"></a>The program at any chapter
 
-The tangler can stop after any chapter and write the program as it stands there. From the `gen` folder:
+The extractor can stop after any chapter and write the program as it stands there. From the `gen` folder:
 
 ```sh
-zig build tangle -- --through tangle.md --out .build/snapshot
+zig build extract -- --through code.md --out .build/snapshot
 ```
 
 A slot that a later chapter fills is left empty, and a file that a later chapter starts doesn't exist yet. The gate builds the program at the end of every chapter and runs its tests. A chapter that only works once later chapters fill it in is broken.
 
-A chapter is named by its path, like `book/tangle.md`, or by its file name alone. Naming a chapter the book doesn't have is an error.
+A chapter is named by its path, like `book/code.md`, or by its file name alone. Naming a chapter the book doesn't have is an error.
 
-```zig slot=tangle.before
+```zig slot=extract.before
 var stopped = through == null;
 ```
 
-```zig slot=tangle.after-chapter
+```zig slot=extract.after-chapter
 if (through) |name| {
     if (std.mem.eql(u8, chapter.path, name) or std.mem.eql(u8, std.fs.path.basename(chapter.path), name)) {
         stopped = true;
@@ -706,12 +706,12 @@ if (through) |name| {
 }
 ```
 
-```zig slot=tangle.after-book
+```zig slot=extract.after-book
 if (!stopped) return fail(gpa, diag, "", 0, "the book has no chapter named '{s}'", .{through.?});
 ```
 
-```zig file=src/tangle.zig
-test "tangle.snapshots" {
+```zig file=src/extract.zig
+test "extract.snapshots" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const gpa = arena.allocator();
@@ -719,12 +719,12 @@ test "tangle.snapshots" {
         "```zig file=a.zig\nconst a = 1;\n// slot: later\n```\n",
         "```zig slot=later\nconst b = 2;\n```\n```zig file=b.zig\nconst c = 3;\n```\n",
     };
-    const early = try testTangle(gpa, book, "1.md");
+    const early = try testExtract(gpa, book, "1.md");
     try std.testing.expectEqual(@as(usize, 1), early.len);
     try std.testing.expectEqualStrings("// book/1.md:2\nconst a = 1;\n", early[0].bytes);
-    const whole = try testTangle(gpa, book, "book/2.md");
+    const whole = try testExtract(gpa, book, "book/2.md");
     try std.testing.expectEqual(@as(usize, 2), whole.len);
-    try std.testing.expectError(error.Tangle, testTangle(gpa, book, "nowhere.md"));
+    try std.testing.expectError(error.Extract, testExtract(gpa, book, "nowhere.md"));
 }
 ```
 
@@ -733,20 +733,20 @@ test "tangle.snapshots" {
 A rule is a section whose heading carries an ID. The ID is written as an anchor at the start of the heading, which readers never see:
 
 ```markdown
-## <a id="tangle.slots"></a>Slots
+## <a id="extract.slots"></a>Slots
 ```
 
 IDs are lowercase words separated by dots, and each appears once in the book. Every rule must have at least one Rubric example under it, or a Zig test named for its ID:
 
 ```zig
-test "tangle.slots" {
+test "extract.slots" {
     // The test for the rule above.
 }
 ```
 
 A rule's section runs to the next heading at its level or above, so an example under one of its subheadings counts. The gate lists every rule ID, looks for its example or its test, and fails on any rule with neither. A rule without a check is a promise nobody is keeping.
 
-```zig file=src/tangle.zig
+```zig file=src/extract.zig
 /// The ID a heading carries, if its text starts with an anchor.
 fn ruleId(gpa: Allocator, diag: *Diagnostic, chapter: []const u8, heading: Heading) Error!?[]const u8 {
     const open = "<a id=\"";
@@ -815,26 +815,26 @@ test "book.rules" {
     };
     const covered: []const Output = &.{.{ .path = "t.zig", .bytes = "test \"a.two\" {}\n" }};
     try std.testing.expectEqual(@as(usize, 2), try checkRules(gpa, &diag, &.{chapter}, covered));
-    try std.testing.expectError(error.Tangle, checkRules(gpa, &diag, &.{chapter}, &.{}));
-    try std.testing.expectError(error.Tangle, checkRules(gpa, &diag, &.{ chapter, chapter }, covered));
+    try std.testing.expectError(error.Extract, checkRules(gpa, &diag, &.{chapter}, &.{}));
+    try std.testing.expectError(error.Extract, checkRules(gpa, &diag, &.{ chapter, chapter }, covered));
 }
 ```
 
-## Running the tangler
+## Running the extractor
 
-The tangler is a small command. It reads the book from the root of the repository, writes the files into `gen`, and with `--rules` checks the rules as well:
+The extractor is a small command. It reads the book from the root of the repository, writes the files into `gen`, and with `--rules` checks the rules as well:
 
 ```sh
-tangle [--root DIR] [--out DIR] [--through CHAPTER] [--rules]
+extract [--root DIR] [--out DIR] [--through CHAPTER] [--rules]
 ```
 
 It empties the output folder before writing, so a file the book no longer builds doesn't linger. The folder must be a plain relative path, so that a slip can't empty the repository.
 
 ```zig file=src/main.zig
 const std = @import("std");
-const tangle = @import("tangle.zig");
+const extract = @import("extract.zig");
 
-const usage = "usage: tangle [--root DIR] [--out DIR] [--through CHAPTER] [--rules]\n";
+const usage = "usage: extract [--root DIR] [--out DIR] [--through CHAPTER] [--rules]\n";
 
 pub fn main(init: std.process.Init) !void {
     const gpa = init.arena.allocator();
@@ -862,12 +862,12 @@ pub fn main(init: std.process.Init) !void {
             through = args[i];
         } else stop(usage);
     }
-    if (!tangle.insideGen(out)) stop("--out must be a plain relative path\n");
+    if (!extract.insideGen(out)) stop("--out must be a plain relative path\n");
 
     const dir = std.Io.Dir.cwd().openDir(io, root, .{}) catch stop("cannot open the book's root folder\n");
     const summary = dir.readFileAlloc(io, "book/SUMMARY.md", gpa, .unlimited) catch stop("cannot read book/SUMMARY.md\n");
-    const order = try tangle.readingOrder(gpa, summary);
-    var chapters: std.ArrayList(tangle.Chapter) = .empty;
+    const order = try extract.readingOrder(gpa, summary);
+    var chapters: std.ArrayList(extract.Chapter) = .empty;
     for (order) |path| {
         const text = dir.readFileAlloc(io, path, gpa, .unlimited) catch {
             std.debug.print("cannot read {s}, which the summary lists\n", .{path});
@@ -876,10 +876,10 @@ pub fn main(init: std.process.Init) !void {
         try chapters.append(gpa, .{ .path = path, .text = text });
     }
 
-    var diag: tangle.Diagnostic = .{};
-    const outputs = tangle.tangle(gpa, &diag, chapters.items, through) catch |err| report(err, diag);
+    var diag: extract.Diagnostic = .{};
+    const outputs = extract.extract(gpa, &diag, chapters.items, through) catch |err| report(err, diag);
     if (rules) {
-        const count = tangle.checkRules(gpa, &diag, chapters.items, outputs) catch |err| report(err, diag);
+        const count = extract.checkRules(gpa, &diag, chapters.items, outputs) catch |err| report(err, diag);
         std.debug.print("{d} rules, each with a check\n", .{count});
     }
 
@@ -889,7 +889,7 @@ pub fn main(init: std.process.Init) !void {
         if (std.fs.path.dirname(path)) |parent| try dir.createDirPath(io, parent);
         try dir.writeFile(io, .{ .sub_path = path, .data = output.bytes });
     }
-    std.debug.print("tangled {d} files into {s}\n", .{ outputs.len, out });
+    std.debug.print("extracted {d} files into {s}\n", .{ outputs.len, out });
 }
 
 fn stop(message: []const u8) noreturn {
@@ -897,10 +897,10 @@ fn stop(message: []const u8) noreturn {
     std.process.exit(2);
 }
 
-fn report(err: tangle.Error, diag: tangle.Diagnostic) noreturn {
+fn report(err: extract.Error, diag: extract.Diagnostic) noreturn {
     switch (err) {
         error.OutOfMemory => std.debug.print("out of memory\n", .{}),
-        error.Tangle => if (diag.path.len > 0)
+        error.Extract => if (diag.path.len > 0)
             std.debug.print("{s}:{d}: {s}\n", .{ diag.path, diag.line, diag.message })
         else
             std.debug.print("{s}\n", .{diag.message}),
@@ -909,7 +909,7 @@ fn report(err: tangle.Error, diag: tangle.Diagnostic) noreturn {
 }
 
 test {
-    _ = tangle;
+    _ = extract;
 }
 ```
 
@@ -922,7 +922,7 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
     const exe = b.addExecutable(.{
-        .name = "tangle",
+        .name = "extract",
         .root_module = b.createModule(.{
             .root_source_file = b.path("src/main.zig"),
             .target = target,
@@ -935,13 +935,13 @@ pub fn build(b: *std.Build) void {
     run.setCwd(b.path("."));
     run.addArgs(&.{ "--root", ".." });
     run.addPassthruArgs();
-    b.step("tangle", "Tangle the book into gen").dependOn(&run.step);
+    b.step("extract", "Extract the book into gen").dependOn(&run.step);
 
     const tests = b.addTest(.{ .root_module = exe.root_module });
-    b.step("test", "Run the tangler's tests").dependOn(&b.addRunArtifact(tests).step);
+    b.step("test", "Run the extractor's tests").dependOn(&b.addRunArtifact(tests).step);
 }
 ```
 
 ## What this chapter leaves for later
 
-The tangler only understands `//` comments, the comment style of Zig, which is the only language the implementation uses so far. The example runner, which turns `rubric example` blocks into tests, arrives with the first chapter that can run a Rubric program.
+The extractor only understands `//` comments, the comment style of Zig, which is the only language the implementation uses so far. The example runner, which turns `rubric example` blocks into tests, arrives with the first chapter that can run a Rubric program.
