@@ -1,4 +1,4 @@
-// book/numbers.md:90
+// book/numbers.md:92
 const std = @import("std");
 const extract = @import("extract.zig");
 const lang = @import("lang.zig");
@@ -39,7 +39,7 @@ fn play(gpa: Allocator, b: extract.Block) Allocator.Error!?Mismatch {
     }
     return null;
 }
-// book/numbers.md:702
+// book/numbers.md:704
 const usage =
     \\usage: rubric LINE
     \\       rubric --book ROOT [--through CHAPTER]
@@ -75,6 +75,7 @@ fn playBook(gpa: Allocator, io: std.Io, root: []const u8, through: ?[]const u8) 
     const summary = dir.readFileAlloc(io, "book/SUMMARY.md", gpa, .unlimited) catch stop("cannot read book/SUMMARY.md\n");
     var played: usize = 0;
     var wrong: usize = 0;
+    var waiting: usize = 0;
     for (try extract.readingOrder(gpa, summary)) |path| {
         const text = dir.readFileAlloc(io, path, gpa, .unlimited) catch stop("cannot read a chapter the summary lists\n");
         var diag: extract.Diagnostic = .{};
@@ -82,9 +83,14 @@ fn playBook(gpa: Allocator, io: std.Io, root: []const u8, through: ?[]const u8) 
             std.debug.print("{s}:{d}: {s}\n", .{ diag.path, diag.line, diag.message });
             std.process.exit(1);
         };
+        const prose_only = std.mem.startsWith(u8, text, "<!-- prose only -->\n");
         for (parsed.blocks) |b| {
             if (!std.mem.eql(u8, b.language, "rubric")) continue;
             if (!b.hasWord("example") and !b.hasWord("error")) continue;
+            if (prose_only) {
+                waiting += 1;
+                continue;
+            }
             played += 1;
             if (try play(gpa, b)) |mismatch| {
                 wrong += 1;
@@ -100,6 +106,7 @@ fn playBook(gpa: Allocator, io: std.Io, root: []const u8, through: ?[]const u8) 
         std.process.exit(1);
     }
     std.debug.print("{d} examples, each answered as the book says\n", .{played});
+    if (waiting > 0) std.debug.print("{d} more wait for their chapter's code\n", .{waiting});
 }
 
 fn stop(message: []const u8) noreturn {

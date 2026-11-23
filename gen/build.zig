@@ -24,7 +24,7 @@ pub fn build(b: *std.Build) void {
     const test_step = b.step("test", "Run every test in the book");
     test_step.dependOn(&b.addRunArtifact(tests).step);
 
-    // book/numbers.md:773
+    // book/numbers.md:782
     const rubric = b.addExecutable(.{
         .name = "rubric",
         .root_module = b.createModule(.{

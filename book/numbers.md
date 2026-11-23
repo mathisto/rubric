@@ -84,6 +84,8 @@ error R002: division by zero
 
 The gate runs every example and every error in the book on every commit. An example that doesn't run, or answers differently, fails the commit.
 
+There is one exception, for the order the book is written in. A chapter's prose is committed before its code, and until the code lands, its examples can't pass. Such a chapter starts with the line `<!-- prose only -->`, which GitHub and the website both hide. The runner counts its examples as waiting, reports how many, and doesn't run them. The commit that adds the chapter's code removes the line.
+
 The runner is part of the `rubric` command, described at the end of this chapter. It plays a transcript two lines at a time: it hands the typed line to Rubric, and compares the answer with the line under it.
 
 ```zig file=src/rubric.zig
@@ -734,6 +736,7 @@ fn playBook(gpa: Allocator, io: std.Io, root: []const u8, through: ?[]const u8) 
     const summary = dir.readFileAlloc(io, "book/SUMMARY.md", gpa, .unlimited) catch stop("cannot read book/SUMMARY.md\n");
     var played: usize = 0;
     var wrong: usize = 0;
+    var waiting: usize = 0;
     for (try extract.readingOrder(gpa, summary)) |path| {
         const text = dir.readFileAlloc(io, path, gpa, .unlimited) catch stop("cannot read a chapter the summary lists\n");
         var diag: extract.Diagnostic = .{};
@@ -741,9 +744,14 @@ fn playBook(gpa: Allocator, io: std.Io, root: []const u8, through: ?[]const u8) 
             std.debug.print("{s}:{d}: {s}\n", .{ diag.path, diag.line, diag.message });
             std.process.exit(1);
         };
+        const prose_only = std.mem.startsWith(u8, text, "<!-- prose only -->\n");
         for (parsed.blocks) |b| {
             if (!std.mem.eql(u8, b.language, "rubric")) continue;
             if (!b.hasWord("example") and !b.hasWord("error")) continue;
+            if (prose_only) {
+                waiting += 1;
+                continue;
+            }
             played += 1;
             if (try play(gpa, b)) |mismatch| {
                 wrong += 1;
@@ -759,6 +767,7 @@ fn playBook(gpa: Allocator, io: std.Io, root: []const u8, through: ?[]const u8) 
         std.process.exit(1);
     }
     std.debug.print("{d} examples, each answered as the book says\n", .{played});
+    if (waiting > 0) std.debug.print("{d} more wait for their chapter's code\n", .{waiting});
 }
 
 fn stop(message: []const u8) noreturn {

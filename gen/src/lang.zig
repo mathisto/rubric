@@ -1,4 +1,4 @@
-// book/numbers.md:154
+// book/numbers.md:156
 const std = @import("std");
 const Allocator = std.mem.Allocator;
 
@@ -32,7 +32,7 @@ pub fn describe(gpa: Allocator, failure: Failure) Allocator.Error![]const u8 {
         return std.fmt.allocPrint(gpa, "error {s}: {s} (column {d})", .{ failure.code, failure.message, column });
     return std.fmt.allocPrint(gpa, "error {s}: {s}", .{ failure.code, failure.message });
 }
-// book/numbers.md:241
+// book/numbers.md:243
 fn isDigit(c: u8) bool {
     return c >= '0' and c <= '9';
 }
@@ -64,7 +64,7 @@ fn lexNumber(
     try tokens.append(gpa, .{ .kind = .number, .column = start + 1, .value = value });
     return i;
 }
-// book/numbers.md:295
+// book/numbers.md:297
 /// One piece of a typed line.
 pub const Token = struct {
     kind: Kind,
@@ -119,7 +119,7 @@ pub fn lex(gpa: Allocator, out: *Failure, line: []const u8) Error![]const Token 
     try tokens.append(gpa, .{ .kind = .end, .column = line.len + 1 });
     return tokens.items;
 }
-// book/numbers.md:404
+// book/numbers.md:406
 /// An expression, as the parser builds it.
 pub const Expr = union(enum) {
     number: i64,
@@ -252,7 +252,7 @@ pub fn parse(gpa: Allocator, out: *Failure, tokens: []const Token) Error!*const 
     if (p.peek().kind != .end) return p.missingOperator();
     return expr;
 }
-// book/numbers.md:571
+// book/numbers.md:573
 /// Computes an expression's value.
 pub fn evaluate(gpa: Allocator, out: *Failure, expr: *const Expr) Error!i64 {
     switch (expr.*) {
@@ -280,13 +280,13 @@ fn apply(gpa: Allocator, out: *Failure, op: Op, left: i64, right: i64) Error!i64
         .add => @addWithOverflow(left, right),
         .subtract => @subWithOverflow(left, right),
         .multiply => @mulWithOverflow(left, right),
-        // book/numbers.md:652
+        // book/numbers.md:654
         .divide, .remainder => return divide(gpa, out, op, left, right),
     };
     if (result[1] != 0) return tooBig(gpa, out, op, left, right);
     return result[0];
 }
-// book/numbers.md:656
+// book/numbers.md:658
 /// Division that rounds down, and the remainder that goes with it.
 fn divide(gpa: Allocator, out: *Failure, op: Op, left: i64, right: i64) Error!i64 {
     if (right == 0) return fail(gpa, out, "R002", null, "division by zero", .{});
@@ -299,7 +299,7 @@ fn divide(gpa: Allocator, out: *Failure, op: Op, left: i64, right: i64) Error!i6
     if (rem != 0 and (rem < 0) != (right < 0)) return rem + right;
     return rem;
 }
-// book/numbers.md:675
+// book/numbers.md:677
 /// Rubric's answer to one typed line: its value, or the error it found.
 pub fn answer(gpa: Allocator, line: []const u8) Allocator.Error![]const u8 {
     var failure: Failure = undefined;
