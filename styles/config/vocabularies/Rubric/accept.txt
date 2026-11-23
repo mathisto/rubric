@@ -43,3 +43,4 @@ mdBook
 Zensical
 lovelace
 microcontrollers
+evaluator

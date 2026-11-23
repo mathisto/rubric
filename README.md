@@ -52,6 +52,6 @@ Rejected ideas stay in the book. A list of them, and a list of what Rubric will 
 
 ## Status
 
-The first chapter, [The book reads itself](book/code.md), builds the extractor: the tool that pulls code out of the chapters into `gen`, and checks on every commit that the two agree. The language itself has no syntax yet, no interpreter and no examples. The tool that runs examples arrives with the first chapter that can run a Rubric program.
+The first chapter, [The book reads itself](book/code.md), builds the extractor: the tool that pulls code out of the chapters into `gen`, and checks on every commit that the two agree. [Whole numbers](book/numbers.md) is the first Rubric that runs: an interpreter for whole-number arithmetic, and a runner that plays every example in the book on every commit. Rubric has one type so far, and no names.
 
 The bootstrap is written in Zig 0.17.1, pinned. Zig is the scaffolding, not the destination.

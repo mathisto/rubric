@@ -6,6 +6,6 @@
 set -eu
 cd "$(dirname "$0")/.."
 for pass in 1 2; do
-    (cd gen && zig build --prefix ../.build/extractor --cache-dir ../.build/zig-cache)
-    .build/extractor/bin/extract --out gen
+    (cd gen && zig build --prefix ../.build/gen --cache-dir ../.build/zig-cache)
+    .build/gen/bin/extract --out gen
 done

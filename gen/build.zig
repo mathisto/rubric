@@ -21,5 +21,17 @@ pub fn build(b: *std.Build) void {
     b.step("extract", "Extract the book into gen").dependOn(&run.step);
 
     const tests = b.addTest(.{ .root_module = exe.root_module });
-    b.step("test", "Run the extractor's tests").dependOn(&b.addRunArtifact(tests).step);
+    const test_step = b.step("test", "Run every test in the book");
+    test_step.dependOn(&b.addRunArtifact(tests).step);
+
+    // book/numbers.md:773
+    const rubric = b.addExecutable(.{
+        .name = "rubric",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/rubric.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    b.installArtifact(rubric);
 }
