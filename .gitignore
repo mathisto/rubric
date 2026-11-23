@@ -1,2 +1,6 @@
 # Build output from tools/build-book.sh
 /.build/
+
+# Zig build output, if someone runs zig build inside gen
+/gen/zig-out/
+/gen/.zig-cache/

@@ -24,6 +24,7 @@ Every commit passes the same checks, or it does not land:
 - Every rule has at least one example, or a test named for it. A rule is a section whose heading carries an ID, written as an anchor that readers never see: `## <a id="lexer.integers"></a>Integer literals`.
 - No two slots share a name, and every slot a block fills exists.
 - The program as it stands at the end of each chapter builds and passes that chapter's examples.
+- The code is formatted exactly as `zig fmt` formats it.
 - The prose passes the style checks described below.
 
 The bootstrap compiler is Zig 0.17.1, pinned by version and hash. Prose is checked by Vale 3.28.1.
