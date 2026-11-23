@@ -62,3 +62,7 @@ Why this over `.rubric.md`:
 The cost: on GitHub, Rubric code shows without color until the language has enough public use for Linguist. The book site highlights it from day one. A tangler rule that only `rubric` fences count keeps any other Markdown in the repo from being read as source.
 
 Rejected: `.rubric.md`. It works today, but code must special-case it, editors lose the preview if it gets its own language id, and its rendering depends on Linguist never claiming it. Also rejected: a custom extension such as `.rbc`, which GitHub shows as raw text, and Pandoc attribute fences, which break on GitHub.
+
+## Revised: labels during the bootstrap
+
+Matt decided on 2026-11-22, while planning the first chapter, that implementation blocks name their real language rather than `rubric`. Until Rubric compiles itself, they open with `zig` and a setting: `file=` for the file they belong to, or `slot=` for a slot an earlier block left open. GitHub highlights them as Zig (tested through its Markdown API), and the settings stay hidden. `rubric example`, `rubric error` and `rubric setup` keep their meaning for Rubric programs. Code grows through named slots, in the manner of Knuth's named chunks, rather than by appending alone.

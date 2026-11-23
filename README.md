@@ -27,17 +27,18 @@ Every chapter goes through the same steps:
 
 ## How to read it
 
-Read it on GitHub, in order. Each chapter is an ordinary Markdown file and renders here as a page.
+Read it on GitHub, in order, starting here and continuing in the [`book`](book/SUMMARY.md) folder. Each chapter is an ordinary Markdown file and renders here as a page.
 
-Code blocks come in three kinds, named on the line that opens the block:
+The line that opens a code block says what the block is:
 
-| Block | What it is |
+| Block opens with | What it is |
 | --- | --- |
-| `rubric` | Part of the implementation |
-| `rubric example` | A program that must run and pass |
-| `rubric error` | A program that must fail, with the error shown under it |
+| `zig file=src/lexer.zig` | Implementation code, and the file it belongs to |
+| `zig slot=lexer.cases` | Implementation code that fills a slot an earlier chapter left open |
+| `rubric example` | A Rubric program that must run and pass |
+| `rubric error` | A Rubric program that must fail, with the error shown under it |
 
-GitHub doesn't know Rubric yet, so the code shows without color. The rendered edition, with search and a print view, is at [rubric.mattkelly.io](https://rubric.mattkelly.io/).
+The implementation is written in Zig until Rubric can compile itself, so for now its blocks say `zig`. GitHub doesn't know Rubric yet, so Rubric programs show without color. The rendered edition, with search and a print view, is at [rubric.mattkelly.io](https://rubric.mattkelly.io/).
 
 The history is part of the book. Each chapter arrives as its own commits, prose first, so the log shows what we promised before it shows what we built.
 
