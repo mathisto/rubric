@@ -505,7 +505,7 @@ test "extract.snapshots" {
     try std.testing.expectEqual(@as(usize, 2), whole.len);
     try std.testing.expectError(error.Extract, testExtract(gpa, book, "nowhere.md"));
 }
-// book/code.md:750
+// book/code.md:752
 /// The ID a heading carries, if its text starts with an anchor.
 fn ruleId(gpa: Allocator, diag: *Diagnostic, chapter: []const u8, heading: Heading) Error!?[]const u8 {
     const open = "<a id=\"";
@@ -519,8 +519,9 @@ fn ruleId(gpa: Allocator, diag: *Diagnostic, chapter: []const u8, heading: Headi
     return id;
 }
 
-/// Checks that every rule ID is used once and has a check: a Rubric example
-/// in its section, or a Zig test named for it. Returns how many rules there are.
+/// Checks that every ID is used once, and that every rule has a check: a
+/// Rubric example in its section, or a Zig test named for it. Decisions need
+/// no check. Returns how many rules there are.
 pub fn checkRules(gpa: Allocator, diag: *Diagnostic, chapters: []const Chapter, outputs: []const Output) Error!usize {
     var seen: std.StringHashMapUnmanaged(Where) = .empty;
     var count: usize = 0;
@@ -528,10 +529,11 @@ pub fn checkRules(gpa: Allocator, diag: *Diagnostic, chapters: []const Chapter, 
         const parsed = try parse(gpa, diag, chapter);
         for (parsed.headings, 0..) |heading, h| {
             const id = (try ruleId(gpa, diag, chapter.path, heading)) orelse continue;
-            count += 1;
             if (seen.get(id)) |first|
-                return fail(gpa, diag, chapter.path, heading.line, "a second rule with ID '{s}'; the first is at {s}:{d}", .{ id, first.chapter, first.line });
+                return fail(gpa, diag, chapter.path, heading.line, "a second heading with ID '{s}'; the first is at {s}:{d}", .{ id, first.chapter, first.line });
             try seen.put(gpa, id, .{ .chapter = chapter.path, .line = heading.line });
+            if (std.mem.startsWith(u8, id, "decision.")) continue;
+            count += 1;
 
             var end: usize = std.math.maxInt(usize);
             for (parsed.headings[h + 1 ..]) |next| {
@@ -571,6 +573,8 @@ test "book.rules" {
         \\```
         \\
         \\## <a id="a.two"></a>Two
+        \\
+        \\## <a id="decision.three"></a>Decision: three
     };
     const covered: []const Output = &.{.{ .path = "t.zig", .bytes = "test \"a.two\" {}\n" }};
     try std.testing.expectEqual(@as(usize, 2), try checkRules(gpa, &diag, &.{chapter}, covered));

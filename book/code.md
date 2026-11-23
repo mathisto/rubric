@@ -2,7 +2,7 @@
 
 By the end of this chapter, the book can build its own source code. A program called the extractor reads every chapter in order, collects the code blocks, and writes them out as ordinary Zig files in a folder called `gen`. The first program it builds is itself.
 
-Knuth's literate programs had the same two steps, which he called tangle and weave: one pulled out code a compiler could read, the other typeset the book. This book calls them what they do. The extractor pulls the code out, and the publisher builds the website; mdBook does our publishing for now. This chapter writes the extractor.
+Knuth's literate programs had the same two steps, which Knuth called tangle and weave: one pulled out code a compiler could read, the other typeset the book. This book calls them what they do. The extractor pulls the code out, and the publisher builds the website; mdBook does our publishing for now. This chapter writes the extractor.
 
 This chapter is about books, not about Rubric, so it has no Rubric examples. Each rule below is checked by a Zig test that carries the rule's ID as its name. The extractor's code sits under the rule it carries out, in Zig, the language of the bootstrap.
 
@@ -746,6 +746,8 @@ test "extract.slots" {
 
 A rule's section runs to the next heading at its level or above, so an example under one of its subheadings counts. The gate lists every rule ID, looks for its example or its test, and fails on any rule with neither. A rule without a check is a promise nobody is keeping.
 
+Decisions are the exception. A heading whose ID starts with `decision.` records a choice we made and why, in the format the Colophon describes. It promises no behavior, so there is nothing to test, and the gate only checks that its ID is used once.
+
 ```zig file=src/extract.zig
 /// The ID a heading carries, if its text starts with an anchor.
 fn ruleId(gpa: Allocator, diag: *Diagnostic, chapter: []const u8, heading: Heading) Error!?[]const u8 {
@@ -760,8 +762,9 @@ fn ruleId(gpa: Allocator, diag: *Diagnostic, chapter: []const u8, heading: Headi
     return id;
 }
 
-/// Checks that every rule ID is used once and has a check: a Rubric example
-/// in its section, or a Zig test named for it. Returns how many rules there are.
+/// Checks that every ID is used once, and that every rule has a check: a
+/// Rubric example in its section, or a Zig test named for it. Decisions need
+/// no check. Returns how many rules there are.
 pub fn checkRules(gpa: Allocator, diag: *Diagnostic, chapters: []const Chapter, outputs: []const Output) Error!usize {
     var seen: std.StringHashMapUnmanaged(Where) = .empty;
     var count: usize = 0;
@@ -769,10 +772,11 @@ pub fn checkRules(gpa: Allocator, diag: *Diagnostic, chapters: []const Chapter, 
         const parsed = try parse(gpa, diag, chapter);
         for (parsed.headings, 0..) |heading, h| {
             const id = (try ruleId(gpa, diag, chapter.path, heading)) orelse continue;
-            count += 1;
             if (seen.get(id)) |first|
-                return fail(gpa, diag, chapter.path, heading.line, "a second rule with ID '{s}'; the first is at {s}:{d}", .{ id, first.chapter, first.line });
+                return fail(gpa, diag, chapter.path, heading.line, "a second heading with ID '{s}'; the first is at {s}:{d}", .{ id, first.chapter, first.line });
             try seen.put(gpa, id, .{ .chapter = chapter.path, .line = heading.line });
+            if (std.mem.startsWith(u8, id, "decision.")) continue;
+            count += 1;
 
             var end: usize = std.math.maxInt(usize);
             for (parsed.headings[h + 1 ..]) |next| {
@@ -812,6 +816,8 @@ test "book.rules" {
         \\```
         \\
         \\## <a id="a.two"></a>Two
+        \\
+        \\## <a id="decision.three"></a>Decision: three
     };
     const covered: []const Output = &.{.{ .path = "t.zig", .bytes = "test \"a.two\" {}\n" }};
     try std.testing.expectEqual(@as(usize, 2), try checkRules(gpa, &diag, &.{chapter}, covered));

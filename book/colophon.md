@@ -4,14 +4,14 @@ A colophon closes a book and says how it was made. This one covers who writes Ru
 
 ## Who writes it
 
-Rubric is a collaboration between Matt Kelly and Claude, the AI model. Matt steers: he designs the language and makes every choice. Claude is the tool that carries those choices out, in prose and in code. "We" in this book means the two of us, working together.
+Rubric is a collaboration between Matt Kelly and Claude, the AI model. Matt steers, designs the language and makes every choice. Claude is the tool that carries those choices out, in prose and in code. "We" in this book means the two of us, working together.
 
 Commits carry no AI credit lines. This page is where the book says how it is made, once and plainly.
 
 ## How a chapter is made
 
 1. **Prose first.** We write the chapter's prose and its examples, and commit them. The examples fail, because nothing implements them yet.
-2. **Markup.** Matt reads the chapter and marks it up. It changes until he accepts it.
+2. **Markup.** Matt reads the chapter and marks it up. It changes until Matt accepts it.
 3. **Code.** Claude writes the code that makes the examples pass, inside the chapter, in blocks that name their language and the file or slot they belong to. Matt reviews it, and it is committed once. Nobody regenerates it later: two runs from the same prose give different code, so the reviewed version is the one that stays.
 4. **Extraction.** A tool pulls the code out of every chapter into a folder of ordinary Zig source, and each file names the chapter and line it came from. That folder is committed. The build regenerates it and fails if the two differ.
 
@@ -21,7 +21,7 @@ Every commit passes the same checks, or it does not land:
 
 - Every code block names its language. Implementation blocks also name the `file=` or `slot=` they belong to. Rubric programs are `rubric example`, `rubric error` or `rubric setup`.
 - Every `rubric example` runs and passes. Every `rubric error` runs and fails with exactly the error shown. No example passes without running.
-- Every rule has at least one example, or a test named for it. A rule is a section whose heading carries an ID, written as an anchor that readers never see: `## <a id="lexer.integers"></a>Integer literals`.
+- Every rule has at least one example, or a test named for it. A rule is a section whose heading carries an ID, written as an anchor that readers never see: `## <a id="lexer.integers"></a>Integer literals`. A decision's ID starts with `decision.`; it records a choice, so it needs no check, only an ID used once.
 - No two slots share a name, and every slot a block fills exists.
 - The program as it stands at the end of each chapter builds and passes that chapter's examples.
 - The code is formatted exactly as `zig fmt` formats it.

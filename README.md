@@ -19,11 +19,11 @@ The idea is old. Donald Knuth named it literate programming in 1984, and wrote T
 Every chapter goes through the same steps:
 
 1. We write the chapter's prose and examples, and commit them. At this point the examples fail, because nothing implements them yet.
-2. Matt reads the chapter and marks it up. It changes until he accepts it.
+2. Matt reads the chapter and marks it up. It changes until Matt accepts it.
 3. Claude writes the code that makes the examples pass, inside the chapter. Matt reviews it, and it is committed.
 4. A tool pulls the code out of every chapter into a folder of ordinary Zig source. That folder is committed too, so anyone can browse the implementation on its own. The build regenerates it and fails if the two differ, so nobody can edit the generated code by hand.
 
-"We" in this book means Matt Kelly and Claude, the AI model, working together. Matt steers: he designs the language and makes every choice. Claude is the tool that carries it out, in prose and in code. The Colophon, the closing appendix, describes the process in full.
+"We" in this book means Matt Kelly and Claude, the AI model, working together. Matt steers, designs the language and makes every choice. Claude is the tool that carries it out, in prose and in code. The Colophon, the closing appendix, describes the process in full.
 
 ## How to read it
 
